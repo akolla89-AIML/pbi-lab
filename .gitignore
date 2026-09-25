@@ -3,4 +3,4 @@ __pycache__/
 *.pyc
 .env
 **/.pbi/localSettings.json
-**/.pbi/cache.abf
+**/.pbi/cache.abfdata/
