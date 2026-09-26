@@ -1,0 +1,58 @@
+table DimGeography
+	lineageTag: b073f871-1007-42d7-8698-04a6c9930823
+
+	column GeographyKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 0e8b7d6a-0793-49df-9c15-bf5ad1cb69bd
+		summarizeBy: none
+		sourceColumn: GeographyKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Country
+		dataType: string
+		lineageTag: c18466ee-6e8d-4c93-bc08-506e99370610
+		summarizeBy: none
+		sourceColumn: Country
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CountryCode
+		dataType: string
+		lineageTag: 431ede39-2075-455b-8960-5e0c78104ce0
+		summarizeBy: none
+		sourceColumn: CountryCode
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		lineageTag: 8a86d6b0-ba0a-4012-9ff3-2dbc0897f166
+		summarizeBy: none
+		sourceColumn: Region
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DimGeography = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database(SqlEndpoint, LakehouseName),
+				    dbo_DimGeography = Source{[Schema="dbo",Item="DimGeography"]}[Data]
+				in
+				    dbo_DimGeography
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

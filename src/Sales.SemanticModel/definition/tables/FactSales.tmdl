@@ -1,0 +1,132 @@
+table FactSales
+	lineageTag: b4ac055e-639c-4e1a-97c8-ccb5220a42a4
+
+	column OrderID
+		dataType: string
+		lineageTag: 6f6f5bda-f7d8-494b-957c-c526fb5f803f
+		summarizeBy: none
+		sourceColumn: OrderID
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrderLineNumber
+		dataType: int64
+		formatString: 0
+		lineageTag: 89eae584-1b55-4f5c-bd8c-0fb80a516342
+		summarizeBy: none
+		sourceColumn: OrderLineNumber
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = User
+
+	column OrderDateKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: ab2a79f9-3c05-4887-8990-8542ca3f2278
+		summarizeBy: none
+		sourceColumn: OrderDateKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CustomerKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 40d1f0b7-ef05-4d02-81ee-d98036230f64
+		summarizeBy: none
+		sourceColumn: CustomerKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 88b70eec-2cef-4835-a68f-8be21340df7f
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column GeographyKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 2a5d3281-a3f3-4621-ad89-af14ac44e126
+		summarizeBy: none
+		sourceColumn: GeographyKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quantity
+		dataType: int64
+		formatString: 0
+		lineageTag: a3570834-ecda-4b68-9b37-a716b694d47e
+		summarizeBy: sum
+		sourceColumn: Quantity
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitPrice
+		dataType: double
+		lineageTag: 99ebb55e-c491-425b-9107-06e4c8d3b521
+		summarizeBy: sum
+		sourceColumn: UnitPrice
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column SalesAmount
+		dataType: double
+		lineageTag: a99b91fb-7f89-4e33-b6bd-235d02e54e83
+		summarizeBy: sum
+		sourceColumn: SalesAmount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column CostAmount
+		dataType: double
+		lineageTag: 0e082738-f929-45ac-96cd-14cc5d14c724
+		summarizeBy: sum
+		sourceColumn: CostAmount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition FactSales = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database(SqlEndpoint, LakehouseName),
+				    dbo_FactSales = Source{[Schema="dbo",Item="FactSales"]}[Data]
+				in
+				    dbo_FactSales
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

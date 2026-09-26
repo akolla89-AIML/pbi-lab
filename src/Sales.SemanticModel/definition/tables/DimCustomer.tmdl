@@ -1,0 +1,83 @@
+table DimCustomer
+	lineageTag: 2ad053fc-467e-4d29-8b1b-b3de36c554bf
+
+	column CustomerKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: a971e0c5-fa2d-4e6b-8f04-a8257f06852f
+		summarizeBy: none
+		sourceColumn: CustomerKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CustomerID
+		dataType: string
+		lineageTag: 6b02d103-4290-4bd0-b7d6-f9e4890d6cd9
+		summarizeBy: none
+		sourceColumn: CustomerID
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column CustomerName
+		dataType: string
+		lineageTag: 6796001c-b472-4c03-87c1-6235ac9d0aee
+		summarizeBy: none
+		sourceColumn: CustomerName
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Segment
+		dataType: string
+		lineageTag: 0e06bfe6-df52-49fa-8796-4e9da6175503
+		summarizeBy: none
+		sourceColumn: Segment
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column GeographyKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: a3a6bdfe-c5a7-46e4-85e2-b0d269e7a8c3
+		summarizeBy: none
+		sourceColumn: GeographyKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column JoinDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 5ae206b5-1ddb-4d3d-b922-cade82375c9c
+		summarizeBy: none
+		sourceColumn: JoinDate
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition DimCustomer = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database(SqlEndpoint, LakehouseName),
+				    dbo_DimCustomer = Source{[Schema="dbo",Item="DimCustomer"]}[Data]
+				in
+				    dbo_DimCustomer
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

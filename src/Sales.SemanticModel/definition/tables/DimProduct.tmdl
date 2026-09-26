@@ -1,0 +1,82 @@
+table DimProduct
+	lineageTag: bb622570-0095-481e-bf37-9db57ac6a2f4
+
+	column ProductKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: a259f9b0-77de-479f-af56-83a27b67d8ef
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column SKU
+		dataType: string
+		lineageTag: 8c8c293c-e165-4fe5-ba1f-90acf8769926
+		summarizeBy: none
+		sourceColumn: SKU
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductName
+		dataType: string
+		lineageTag: 2463064e-a3a6-486c-bfb5-911a53102469
+		summarizeBy: none
+		sourceColumn: ProductName
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Category
+		dataType: string
+		lineageTag: 1c5e3ec8-ee2d-4c71-adb7-5aaed95613bd
+		summarizeBy: none
+		sourceColumn: Category
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitPrice
+		dataType: double
+		lineageTag: 41d39f38-c6fe-42aa-9949-03279195d7ab
+		summarizeBy: none
+		sourceColumn: UnitPrice
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column UnitCost
+		dataType: double
+		lineageTag: 365175a6-0f59-4fc3-9734-0dae5d8e942a
+		summarizeBy: none
+		sourceColumn: UnitCost
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition DimProduct = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database(SqlEndpoint, LakehouseName),
+				    dbo_DimProduct = Source{[Schema="dbo",Item="DimProduct"]}[Data]
+				in
+				    dbo_DimProduct
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

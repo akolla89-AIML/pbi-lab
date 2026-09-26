@@ -1,0 +1,14 @@
+expression SqlEndpoint = "kkz4mcckneguzimsiwynbvvj2e-d6bt5mgiy6yutgu2twwn2jfvjm.datawarehouse.fabric.microsoft.com" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 4add7747-4e88-455b-9812-97970977c64f
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression LakehouseName = "lh_sales" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: e266fcff-a493-4087-886c-b6b04d8049af
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+

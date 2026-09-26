@@ -1,3 +1,13 @@
+# Power BI local-only files
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+
+# Local environment and regenerable data
+.venv/
+__pycache__/
+data/
+.env
+
 .venv/
 __pycache__/
 *.pyc

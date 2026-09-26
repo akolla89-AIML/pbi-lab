@@ -1,0 +1,24 @@
+relationship 31ea962e-41ff-3dbc-ba9b-b055b667c035
+	fromColumn: FactSales.OrderDateKey
+	toColumn: DimDate.DateKey
+
+relationship cc62ac82-4405-5256-dfa5-132d49d0d08c
+	fromColumn: FactSales.CustomerKey
+	toColumn: DimCustomer.CustomerKey
+
+relationship e852a2f4-cea9-9b14-c445-4f93788f71a0
+	fromColumn: FactSales.ProductKey
+	toColumn: DimProduct.ProductKey
+
+relationship b9b9a59c-fd97-7429-c136-48b85bbd606e
+	fromColumn: FactSales.GeographyKey
+	toColumn: DimGeography.GeographyKey
+
+relationship 155487fd-9ab0-5f16-4064-82f9703f67ac
+	fromColumn: FactSalesTarget.GeographyKey
+	toColumn: DimGeography.GeographyKey
+
+relationship d8e7b79e-bc40-9479-2529-71948ad4fbe2
+	fromColumn: FactSalesTarget.MonthDateKey
+	toColumn: DimDate.DateKey
+

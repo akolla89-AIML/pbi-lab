@@ -1,0 +1,51 @@
+table FactSalesTarget
+	lineageTag: df9ce20a-0c95-4e47-8462-ad35830f8bdd
+
+	column GeographyKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: fbfab2c6-2867-476f-8cc2-d64ff35b79d5
+		summarizeBy: none
+		sourceColumn: GeographyKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthDateKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 6fddd386-e46b-4547-83bc-7b9c716c460b
+		summarizeBy: none
+		sourceColumn: MonthDateKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column TargetAmount
+		dataType: int64
+		formatString: 0
+		lineageTag: bcff1869-729e-43b6-b46c-5ce01bbdc87e
+		summarizeBy: sum
+		sourceColumn: TargetAmount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition FactSalesTarget = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database(SqlEndpoint, LakehouseName),
+				    dbo_FactSalesTarget = Source{[Schema="dbo",Item="FactSalesTarget"]}[Data]
+				in
+				    dbo_FactSalesTarget
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
