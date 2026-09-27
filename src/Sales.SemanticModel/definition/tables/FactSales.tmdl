@@ -1,6 +1,102 @@
 table FactSales
 	lineageTag: b4ac055e-639c-4e1a-97c8-ccb5220a42a4
 
+	/// Sum of order-line SalesAmount. Base measure for all sales calculations.
+	measure 'Total Sales' = SUM ( FactSales[SalesAmount] )
+		formatString: \$#,0
+		displayFolder: Sales
+		lineageTag: 7c1a9ae5-e564-4227-ad0d-d818c92eb184
+
+	/// Distinct orders. FactSales is at order-line grain, so COUNTROWS would overcount orders.
+	measure 'Order Count' = DISTINCTCOUNT ( FactSales[OrderID] )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: 78759568-be5b-4814-a47b-a69988bebf2c
+
+	/// Distinct customer keys with sales in context. Counts fact keys, so orphan keys with no DimCustomer match are included.
+	measure 'Customer Count' = DISTINCTCOUNT ( FactSales[CustomerKey] )
+		formatString: #,0
+		displayFolder: Customers
+		lineageTag: 353f9a76-80b8-4c3c-837e-f86be870f7d2
+
+	/// Total Sales divided by Order Count.
+	measure 'Avg Order Value' = DIVIDE ( [Total Sales], [Order Count] )
+		formatString: \$#,0.00
+		displayFolder: Sales
+		lineageTag: e976b09b-8cae-4ef6-a3d9-cd65d5a5fa74
+
+	/// Order Count divided by Customer Count.
+	measure 'Orders per Customer' = DIVIDE ( [Order Count], [Customer Count] )
+		formatString: #,0.00
+		displayFolder: Customers
+		lineageTag: 4c1c7ff5-a161-4619-9d2c-94f92c49c964
+
+	/// Target at its native grain (country x month). BLANK when the context is finer than that grain: any customer or product filter, or a date filter covering only part of a month.
+	measure 'Sales Target' =
+			VAR IsBelowTargetGrain =
+				ISCROSSFILTERED ( DimCustomer ) || ISCROSSFILTERED ( DimProduct )
+			VAR DaysInContext = COUNTROWS ( DimDate )
+			VAR DaysInTouchedMonths =
+				SUMX (
+					DISTINCT ( SELECTCOLUMNS ( DimDate, "@MonthEnd", EOMONTH ( DimDate[Date], 0 ) ) ),
+					DAY ( [@MonthEnd] )
+				)
+			VAR IsPartialMonth = DaysInContext < DaysInTouchedMonths
+			RETURN
+				IF ( NOT IsBelowTargetGrain && NOT IsPartialMonth, SUM ( FactSalesTarget[TargetAmount] ) )
+		formatString: \$#,0
+		displayFolder: Target
+		lineageTag: 11aa8b4f-5870-4aa1-bb4e-dca4d6e2b92b
+
+	/// Total Sales minus Sales Target. BLANK wherever the target is BLANK, so it never shows full sales as a variance.
+	measure 'Sales Variance' =
+			VAR TargetValue = [Sales Target]
+			RETURN
+				IF ( NOT ISBLANK ( TargetValue ), [Total Sales] - TargetValue )
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Target
+		lineageTag: 016dc85f-db06-4ca9-9263-13f31ab18669
+
+	/// Sales Variance as a share of Sales Target.
+	measure 'Sales Variance %' = DIVIDE ( [Sales Variance], [Sales Target] )
+		formatString: 0.0%
+		displayFolder: Target
+		lineageTag: ac32ce46-7392-4367-9ac2-8248d8900e9f
+
+	/// Total Sales for the same period one year earlier.
+	measure 'Sales PY' = CALCULATE ( [Total Sales], SAMEPERIODLASTYEAR ( DimDate[Date] ) )
+		formatString: \$#,0
+		displayFolder: Time Intelligence
+		lineageTag: 4684e6b5-7565-4503-9cf5-ad047b19e4e2
+
+	/// Year-over-year growth. BLANK when there is no prior-year sales.
+	measure 'Sales YoY %' = DIVIDE ( [Total Sales] - [Sales PY], [Sales PY] )
+		formatString: 0.0%
+		displayFolder: Time Intelligence
+		lineageTag: 2b6fe1c0-23cc-4883-8a29-cf898c473360
+
+	/// Calendar year-to-date Total Sales.
+	measure 'Sales YTD' = CALCULATE ( [Total Sales], DATESYTD ( DimDate[Date] ) )
+		formatString: \$#,0
+		displayFolder: Time Intelligence
+		lineageTag: 2f8fa5e3-cafd-43ea-9386-e82ec5b7e94e
+
+	/// Total Sales over the 12 months ending on the last date in context.
+	measure 'Sales R12M' =
+			CALCULATE (
+				[Total Sales],
+				DATESINPERIOD ( DimDate[Date], MAX ( DimDate[Date] ), -12, MONTH )
+			)
+		formatString: \$#,0
+		displayFolder: Time Intelligence
+		lineageTag: 8c414e54-6afc-494f-a4fb-dfde3681294b
+
+	/// A customer's share of sales across the customers currently selected (respects slicers).
+	measure 'Customer Contribution %' = DIVIDE ( [Total Sales], CALCULATE ( [Total Sales], ALLSELECTED ( DimCustomer ) ) )
+		formatString: 0.0%
+		displayFolder: Customers
+		lineageTag: d6786e93-d27d-4cda-b5be-5dfd447b396e
+
 	column OrderID
 		dataType: string
 		lineageTag: 6f6f5bda-f7d8-494b-957c-c526fb5f803f
@@ -95,6 +191,7 @@ table FactSales
 
 	column SalesAmount
 		dataType: double
+		isHidden
 		lineageTag: a99b91fb-7f89-4e33-b6bd-235d02e54e83
 		summarizeBy: sum
 		sourceColumn: SalesAmount
