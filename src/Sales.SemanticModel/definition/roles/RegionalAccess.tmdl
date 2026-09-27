@@ -1,0 +1,32 @@
+role RegionalAccess
+	modelPermission: read
+
+	tablePermission DimCustomer =
+			VAR CustomerRegion =
+			    LOOKUPVALUE (
+			        DimGeography[Region],
+			        DimGeography[GeographyKey], DimCustomer[GeographyKey]
+			    )
+			VAR UserRegions =
+			    CALCULATETABLE (
+			        VALUES ( UserRegion[Region] ),
+			        UserRegion[UserPrincipalName] = USERPRINCIPALNAME ()
+			    )
+			RETURN
+			    "ALL" IN UserRegions
+			        || CustomerRegion IN UserRegions
+
+	tablePermission DimGeography =
+			VAR UserRegions =
+			    CALCULATETABLE (
+			        VALUES ( UserRegion[Region] ),
+			        UserRegion[UserPrincipalName] = USERPRINCIPALNAME ()
+			    )
+			RETURN
+			    "ALL" IN UserRegions
+			        || DimGeography[Region] IN UserRegions
+
+	tablePermission UserRegion = UserRegion[UserPrincipalName] = USERPRINCIPALNAME ()
+
+	annotation PBI_Id = 0db947231b374a039aee8822f6737bf1
+

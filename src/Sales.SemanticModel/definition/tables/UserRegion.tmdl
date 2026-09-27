@@ -1,0 +1,41 @@
+table UserRegion
+	isHidden
+	lineageTag: 61aeb776-7e26-44c8-91a0-c16cf14c4974
+
+	column UserPrincipalName
+		dataType: string
+		isHidden
+		lineageTag: 58f7ce75-8577-474c-bf20-62752a48d0a1
+		summarizeBy: none
+		sourceColumn: UserPrincipalName
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		isHidden
+		lineageTag: bdf0355f-c879-4816-83a0-9a588a188c03
+		summarizeBy: none
+		sourceColumn: Region
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition UserRegion = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database(SqlEndpoint, LakehouseName),
+				    dbo_DimGeography = Source{[Schema="dbo",Item="userregion"]}[Data]
+				in
+				    dbo_DimGeography
+
+	changedProperty = IsHidden
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
