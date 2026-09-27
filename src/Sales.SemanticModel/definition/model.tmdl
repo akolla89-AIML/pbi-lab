@@ -8,7 +8,7 @@ model Model
 
 annotation __PBI_TimeIntelligenceEnabled = 0
 
-annotation PBI_QueryOrder = ["SqlEndpoint","LakehouseName","DimCustomer","DimDate","DimGeography","DimProduct","FactSales","FactSalesTarget"]
+annotation PBI_QueryOrder = ["SqlEndpoint","LakehouseName","DimCustomer","DimDate","DimGeography","DimProduct","FactSales","FactSalesTarget","UserRegion"]
 
 annotation PBI_ProTooling = ["DevMode","DaxQueryView_Desktop","TMDLView_Desktop"]
 
@@ -18,6 +18,9 @@ ref table DimGeography
 ref table DimProduct
 ref table FactSales
 ref table FactSalesTarget
+ref table UserRegion
+
+ref role RegionalAccess
 
 ref cultureInfo en-US
 
