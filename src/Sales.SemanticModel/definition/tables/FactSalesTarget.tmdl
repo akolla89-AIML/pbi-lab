@@ -27,6 +27,7 @@ table FactSalesTarget
 
 	column TargetAmount
 		dataType: int64
+		isHidden
 		formatString: 0
 		lineageTag: bcff1869-729e-43b6-b46c-5ce01bbdc87e
 		summarizeBy: sum

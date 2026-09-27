@@ -1,0 +1,45 @@
+// T1 Reconciliation: measures must equal raw column sums
+EVALUATE
+ROW (
+    "Total Sales", [Total Sales],        "Raw SalesAmount",  SUM ( FactSales[SalesAmount] ),
+    "Sales Target", [Sales Target],      "Raw TargetAmount", SUM ( FactSalesTarget[TargetAmount] ),
+    "Order Count", [Order Count],        "Order lines",      COUNTROWS ( FactSales )
+)
+
+// T2 Grain guard: Target column should be BLANK in all three
+EVALUATE SUMMARIZECOLUMNS ( DimCustomer[Segment], "Sales", [Total Sales], "Target", [Sales Target] )
+EVALUATE SUMMARIZECOLUMNS ( DimProduct[Category], "Sales", [Total Sales], "Target", [Sales Target] )
+EVALUATE SUMMARIZECOLUMNS ( DimDate[IsWeekend],   "Sales", [Total Sales], "Target", [Sales Target] )
+
+// T3 Target at a valid grain: should be populated
+EVALUATE
+SUMMARIZECOLUMNS (
+    DimGeography[Region], DimDate[Year],
+    "Sales", [Total Sales], "Target", [Sales Target],
+    "Variance", [Sales Variance], "Var %", [Sales Variance %]
+)
+
+// T4 Time intelligence
+EVALUATE
+SUMMARIZECOLUMNS (
+    DimDate[Year], DimDate[MonthNumber],
+    "Sales", [Total Sales], "PY", [Sales PY], "YoY %", [Sales YoY %],
+    "YTD", [Sales YTD], "R12M", [Sales R12M]
+)
+ORDER BY DimDate[Year], DimDate[MonthNumber]
+
+// T5 Contribution shares must sum to 1
+EVALUATE
+VAR Shares = ADDCOLUMNS ( VALUES ( DimCustomer[CustomerName] ), "@Pct", [Customer Contribution %] )
+RETURN ROW ( "Sum of shares", SUMX ( Shares, [@Pct] ) )
+
+// T6 Planted story: one region should decline, driven by customer count
+EVALUATE
+SUMMARIZECOLUMNS (
+    DimGeography[Region], DimDate[Year], DimDate[Quarter],
+    "Sales", [Total Sales], "Customers", [Customer Count], "Orders/Cust", [Orders per Customer]
+)
+
+// T7 Integrity: orphan fact rows. BLANK on QA data; this is the check that fails in DEV on Day 2
+EVALUATE
+ROW ( "Orphan fact rows", CALCULATE ( COUNTROWS ( FactSales ), ISBLANK ( DimCustomer[CustomerKey] ) ) )
