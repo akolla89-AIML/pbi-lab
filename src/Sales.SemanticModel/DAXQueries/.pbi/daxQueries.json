@@ -1,8 +1,7 @@
 {
   "version": "1.0.0",
   "tabOrder": [
-    "MeasureTests",
-    "Query 1"
+    "MeasureTests"
   ],
-  "defaultTab": "Query 1"
+  "defaultTab": "MeasureTests"
 }
