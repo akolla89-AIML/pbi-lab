@@ -81,15 +81,27 @@ table FactSales
 		displayFolder: Time Intelligence
 		lineageTag: 2f8fa5e3-cafd-43ea-9386-e82ec5b7e94e
 
-	/// Total Sales over the 12 months ending on the last date in context.
+	/// Total Sales over the 12 months ending on the last date in context. BLANK when that window starts before the first month of sales history, so a partial window is never shown as a 12-month total.
 	measure 'Sales R12M' =
-			CALCULATE (
-				[Total Sales],
-				DATESINPERIOD ( DimDate[Date], MAX ( DimDate[Date] ), -12, MONTH )
-			)
+			VAR _windowEnd = MAX ( DimDate[Date] )
+			VAR _windowStart = EDATE ( _windowEnd, -12 ) + 1
+			VAR _firstSale =
+				CALCULATE (
+					MINX ( FactSales, RELATED ( DimDate[Date] ) ),
+					REMOVEFILTERS ()
+				)
+			VAR _historyStart = EOMONTH ( _firstSale, -1 ) + 1
+			RETURN
+				IF (
+					_windowStart >= _historyStart,
+					CALCULATE (
+						[Total Sales],
+						DATESINPERIOD ( DimDate[Date], _windowEnd, -12, MONTH )
+					)
+				)
 		formatString: \$#,0
 		displayFolder: Time Intelligence
-		lineageTag: 8c414e54-6afc-494f-a4fb-dfde3681294b
+		lineageTag: e1988a51-b7cd-4263-9d15-871fde0aa965
 
 	/// A customer's share of sales across the customers currently selected (respects slicers).
 	measure 'Customer Contribution %' = DIVIDE ( [Total Sales], CALCULATE ( [Total Sales], ALLSELECTED ( DimCustomer ) ) )

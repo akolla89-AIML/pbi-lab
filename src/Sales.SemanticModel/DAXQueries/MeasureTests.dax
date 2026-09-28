@@ -19,7 +19,7 @@ SUMMARIZECOLUMNS (
     "Variance", [Sales Variance], "Var %", [Sales Variance %]
 )
 
-// T4 Time intelligence
+// T4 Time intelligence: R12M BLANK for Jan-Nov of year 1; year-1 Dec R12M = year-1 Dec YTD
 EVALUATE
 SUMMARIZECOLUMNS (
     DimDate[Year], DimDate[MonthNumber],
@@ -43,3 +43,22 @@ SUMMARIZECOLUMNS (
 // T7 Integrity: orphan fact rows. BLANK on QA data; this is the check that fails in DEV on Day 2
 EVALUATE
 ROW ( "Orphan fact rows", CALCULATE ( COUNTROWS ( FactSales ), ISBLANK ( DimCustomer[CustomerKey] ) ) )
+
+// T8 R12M guard: BLANK until the 12-month window is fully covered by history
+EVALUATE
+ROW (
+    "First sale",                  CALCULATE ( MINX ( FactSales, RELATED ( DimDate[Date] ) ), REMOVEFILTERS () ),
+    "Nov 2024 (expect blank)",     CALCULATE ( [Sales R12M], DimDate[Year] = 2024, DimDate[MonthNumber] = 11 ),
+    "Dec 2024 (expect = 2024)",    CALCULATE ( [Sales R12M], DimDate[Year] = 2024, DimDate[MonthNumber] = 12 ),
+    "2024 total",                  CALCULATE ( [Total Sales], DimDate[Year] = 2024 ),
+    "15 Dec 2024 (expect blank)",  CALCULATE ( [Sales R12M], DimDate[Date] = DATE ( 2024, 12, 15 ) ),
+    "Dec 2025 (expect populated)", CALCULATE ( [Sales R12M], DimDate[Year] = 2025, DimDate[MonthNumber] = 12 )
+)
+
+// T8b Guard uses model history, not the slice: every segment populated for Dec 2024
+EVALUATE
+SUMMARIZECOLUMNS (
+    DimCustomer[Segment],
+    TREATAS ( { ( 2024, 12 ) }, DimDate[Year], DimDate[MonthNumber] ),
+    "R12M", [Sales R12M]
+)
