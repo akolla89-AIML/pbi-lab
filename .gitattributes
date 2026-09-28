@@ -1,0 +1,32 @@
+# Default: Git decides text vs binary. Text is stored as LF in the repo and
+# checked out in the platform's native ending (CRLF on Windows, LF on Linux runners).
+* text=auto
+
+# PBIP model and report definitions: always text
+*.tmdl   text
+*.json   text
+*.pbip   text
+*.pbir   text
+*.pbism  text
+*.dax    text
+.platform text
+
+# Repo and pipeline files
+*.md     text
+*.yml    text
+*.yaml   text
+*.py     text
+
+# Scripts executed on Linux runners must be LF even when checked out on Windows
+*.sh     text eol=lf
+
+# Data files: store byte-for-byte, never convert
+*.csv    -text
+
+# Binary: never convert, never diff
+*.pbix    binary
+*.abf     binary
+*.parquet binary
+*.xlsx    binary
+*.png     binary
+*.jpg     binary
