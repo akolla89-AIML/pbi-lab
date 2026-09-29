@@ -1,0 +1,13 @@
+# Environment-specific replacements applied by fabric-cicd at deploy time.
+# Keys under replace_value must match the FABRIC_ENVIRONMENT variable exactly.
+
+find_replace:
+  # Re-point the Sales model's SqlEndpoint parameter to the target
+  # workspace's lh_sales SQL analytics endpoint, resolved at deploy time.
+  - find_value: 'expression\s+SqlEndpoint\s*=\s*"([^"]+)"'
+    is_regex: "true"
+    replace_value:
+      DEV: "$workspace.Sales-DEV.$items.Lakehouse.lh_sales.$sqlendpoint"
+      QA: "$workspace.Sales-QA.$items.Lakehouse.lh_sales.$sqlendpoint"
+    item_type: "SemanticModel"
+    file_path: "/Sales.SemanticModel/definition/expressions.tmdl"
