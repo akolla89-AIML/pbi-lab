@@ -1,0 +1,68 @@
+// T4 Time intelligence: PY = same month last year, YoY % = (Sales - PY) / PY, December YTD = year total,
+// R12M BLANK for Jan-Nov of the first year and first-year December R12M = December YTD.
+// The R12M lines assume history starts in January, as the lab data does; T8 checks the guard in general.
+EVALUATE
+VAR _months =
+    ADDCOLUMNS (
+        SUMMARIZE ( DimDate, DimDate[Year], DimDate[MonthNumber] ),
+        "@Sales", [Total Sales],
+        "@PY", [Sales PY],
+        "@YoY", [Sales YoY %],
+        "@YTD", [Sales YTD],
+        "@R12M", [Sales R12M]
+    )
+VAR _firstYear = MINX ( FILTER ( _months, NOT ISBLANK ( [@Sales] ) ), DimDate[Year] )
+VAR _pyErrors =
+    0
+        + COUNTROWS (
+            FILTER (
+                _months,
+                VAR _y = DimDate[Year]
+                VAR _m = DimDate[MonthNumber]
+                VAR _salesYearBefore =
+                    MAXX ( FILTER ( _months, DimDate[Year] = _y - 1 && DimDate[MonthNumber] = _m ), [@Sales] )
+                RETURN
+                    ( _y = _firstYear && NOT ISBLANK ( [@PY] ) )
+                        || ( _y > _firstYear && ABS ( [@PY] - _salesYearBefore ) > 0.01 )
+            )
+        )
+VAR _yoyErrors =
+    0
+        + COUNTROWS (
+            FILTER (
+                _months,
+                DimDate[Year] > _firstYear
+                    && ABS ( [@YoY] - DIVIDE ( [@Sales] - [@PY], [@PY] ) ) > 0.000001
+            )
+        )
+VAR _ytdErrors =
+    0
+        + COUNTROWS (
+            FILTER (
+                _months,
+                VAR _y = DimDate[Year]
+                VAR _yearTotal = SUMX ( FILTER ( _months, DimDate[Year] = _y ), [@Sales] )
+                RETURN
+                    DimDate[MonthNumber] = 12 && ABS ( [@YTD] - _yearTotal ) > 0.01
+            )
+        )
+VAR _r12mErrors =
+    0
+        + COUNTROWS (
+            FILTER (
+                _months,
+                DimDate[Year] = _firstYear
+                    && (
+                        ( DimDate[MonthNumber] < 12 && NOT ISBLANK ( [@R12M] ) )
+                            || ( DimDate[MonthNumber] = 12
+                                && ( ISBLANK ( [@R12M] ) || ABS ( [@R12M] - [@YTD] ) > 0.01 ) )
+                    )
+            )
+        )
+RETURN
+    ROW (
+        "Pass", _pyErrors + _yoyErrors + _ytdErrors + _r12mErrors = 0,
+        "Detail",
+            "Months failing: PY " & _pyErrors & ", YoY " & _yoyErrors & ", YTD " & _ytdErrors
+                & ", R12M " & _r12mErrors & " (first year " & _firstYear & ")"
+    )

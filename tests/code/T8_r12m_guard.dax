@@ -1,0 +1,35 @@
+// T8 R12M guard: BLANK until the 12-month window is fully covered by history.
+// Months are counted from the first month with sales, so this holds whenever history starts.
+EVALUATE
+VAR _firstSale = CALCULATE ( MINX ( FactSales, RELATED ( DimDate[Date] ) ), REMOVEFILTERS () )
+VAR _historyStart = EOMONTH ( _firstSale, -1 ) + 1
+VAR _month11Start = EOMONTH ( _historyStart, 9 ) + 1
+VAR _month12Start = EOMONTH ( _historyStart, 10 ) + 1
+VAR _month12End = EOMONTH ( _historyStart, 11 )
+VAR _month24Start = EOMONTH ( _historyStart, 22 ) + 1
+VAR _month11 =
+    CALCULATE ( [Sales R12M], DATESBETWEEN ( DimDate[Date], _month11Start, EOMONTH ( _month11Start, 0 ) ) )
+VAR _month12 =
+    CALCULATE ( [Sales R12M], DATESBETWEEN ( DimDate[Date], _month12Start, _month12End ) )
+VAR _first12Total =
+    CALCULATE ( [Total Sales], DATESBETWEEN ( DimDate[Date], _historyStart, _month12End ) )
+VAR _month12Day15 =
+    CALCULATE ( [Sales R12M], DimDate[Date] = _month12Start + 14 )
+VAR _month24 =
+    CALCULATE ( [Sales R12M], DATESBETWEEN ( DimDate[Date], _month24Start, EOMONTH ( _month24Start, 0 ) ) )
+VAR _pass =
+    ISBLANK ( _month11 )
+        && ISBLANK ( _month12Day15 )
+        && NOT ISBLANK ( _month12 )
+        && ABS ( _month12 - _first12Total ) < 0.01
+        && NOT ISBLANK ( _month24 )
+RETURN
+    ROW (
+        "Pass", _pass,
+        "Detail",
+            "History from " & FORMAT ( _historyStart, "yyyy-mm-dd" )
+                & "; month 11 [" & FORMAT ( _month11, "0" ) & "] (expect blank)"
+                & "; month 12 day 15 [" & FORMAT ( _month12Day15, "0" ) & "] (expect blank)"
+                & "; month 12 " & FORMAT ( _month12, "0" ) & " vs first 12 months " & FORMAT ( _first12Total, "0" )
+                & "; month 24 [" & FORMAT ( _month24, "0" ) & "] (expect a value)"
+    )

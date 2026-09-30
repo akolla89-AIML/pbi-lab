@@ -1,0 +1,13 @@
+// T7 Orphan fact rows: FactSales rows whose key has no match in its dimension (expect 0 everywhere; DEV has 25 planted customer orphans)
+EVALUATE
+VAR _customer = 0 + CALCULATE ( COUNTROWS ( FactSales ), ISBLANK ( DimCustomer[CustomerKey] ) )
+VAR _product = 0 + CALCULATE ( COUNTROWS ( FactSales ), ISBLANK ( DimProduct[ProductKey] ) )
+VAR _geography = 0 + CALCULATE ( COUNTROWS ( FactSales ), ISBLANK ( DimGeography[GeographyKey] ) )
+VAR _date = 0 + CALCULATE ( COUNTROWS ( FactSales ), ISBLANK ( DimDate[DateKey] ) )
+RETURN
+    ROW (
+        "Pass", _customer + _product + _geography + _date = 0,
+        "Detail",
+            "Orphan FactSales rows: customer " & _customer & ", product " & _product
+                & ", geography " & _geography & ", date " & _date
+    )

@@ -1,0 +1,34 @@
+// T6 Planted story (data expectation): in the latest year, EMEA's active customers fall by more than 20%
+// from Q2 to Q4 while orders per EMEA customer stay within 0.8-1.25x, and no other region falls that far.
+EVALUATE
+VAR _lastSale = CALCULATE ( MAXX ( FactSales, RELATED ( DimDate[Date] ) ), REMOVEFILTERS () )
+VAR _year = YEAR ( _lastSale )
+VAR _regions =
+    ADDCOLUMNS (
+        VALUES ( DimGeography[Region] ),
+        "@CustQ2", CALCULATE ( [Customer Count], DimDate[Year] = _year, DimDate[MonthNumber] IN { 4, 5, 6 } ),
+        "@CustQ4", CALCULATE ( [Customer Count], DimDate[Year] = _year, DimDate[MonthNumber] IN { 10, 11, 12 } ),
+        "@OpcQ2", CALCULATE ( [Orders per Customer], DimDate[Year] = _year, DimDate[MonthNumber] IN { 4, 5, 6 } ),
+        "@OpcQ4", CALCULATE ( [Orders per Customer], DimDate[Year] = _year, DimDate[MonthNumber] IN { 10, 11, 12 } )
+    )
+VAR _ratios =
+    ADDCOLUMNS (
+        _regions,
+        "@CustRatio", DIVIDE ( [@CustQ4], [@CustQ2] ),
+        "@OpcRatio", DIVIDE ( [@OpcQ4], [@OpcQ2] )
+    )
+VAR _declining = FILTER ( _ratios, [@CustRatio] < 0.8 )
+VAR _emeaOpc = MAXX ( FILTER ( _ratios, DimGeography[Region] = "EMEA" ), [@OpcRatio] )
+VAR _pass =
+    COUNTROWS ( _declining ) = 1
+        && MAXX ( _declining, DimGeography[Region] ) = "EMEA"
+        && _emeaOpc >= 0.8
+        && _emeaOpc <= 1.25
+RETURN
+    ROW (
+        "Pass", _pass,
+        "Detail",
+            "Q4/Q2 " & _year & " customers: "
+                & CONCATENATEX ( _ratios, DimGeography[Region] & " " & FORMAT ( [@CustRatio], "0.00" ), ", " )
+                & "; EMEA orders per customer " & FORMAT ( _emeaOpc, "0.00" )
+    )
