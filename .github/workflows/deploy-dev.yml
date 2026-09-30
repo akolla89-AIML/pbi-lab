@@ -1,0 +1,79 @@
+name: Deploy to DEV
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - "src/**"
+      - "scripts/**"
+      - "tests/**"
+      - "requirements.txt"
+      - ".github/workflows/deploy-dev.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
+jobs:
+  deploy-dev:
+    name: Check, deploy, refresh, test (Sales-DEV)
+    runs-on: ubuntu-24.04
+    environment: dev
+    timeout-minutes: 45
+    env:
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      FABRIC_ENVIRONMENT: ${{ vars.FABRIC_ENVIRONMENT }}
+      FABRIC_WORKSPACE_ID: ${{ vars.FABRIC_WORKSPACE_ID }}
+      FABRIC_WORKSPACE_NAME: ${{ vars.FABRIC_WORKSPACE_NAME }}
+      LAKEHOUSE_NAME: ${{ vars.LAKEHOUSE_NAME }}
+      PYTHONUNBUFFERED: "1"
+
+    steps:
+      - name: Check out the commit being deployed
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10.11"
+          cache: pip
+
+      - name: Install Python packages
+        run: python -m pip install -r requirements.txt
+
+      - name: Install ODBC Driver 18 (only if missing)
+        run: |
+          if odbcinst -q -d -n "ODBC Driver 18 for SQL Server" > /dev/null 2>&1; then
+            echo "ODBC Driver 18 is already installed."
+            exit 0
+          fi
+          sudo apt-get update
+          if ! sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18; then
+            curl -sSL -O "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb"
+            sudo dpkg -i packages-microsoft-prod.deb
+            sudo apt-get update
+            sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18
+          fi
+
+      - name: Pre-refresh source check (blocks)
+        run: python scripts/check_source.py
+
+      - name: Deploy semantic model and report
+        run: python scripts/deploy.py
+
+      - name: Refresh semantic model
+        id: refresh
+        run: python scripts/refresh_model.py
+
+      - name: Code tests (block)
+        run: python scripts/run_dax_tests.py --suite code
+
+      - name: Integrity tests (alert only)
+        if: ${{ !cancelled() && steps.refresh.outcome == 'success' }}
+        run: python scripts/run_dax_tests.py --suite integrity
