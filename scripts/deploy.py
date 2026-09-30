@@ -50,6 +50,8 @@ def token_identity(token: str) -> tuple:
 def guard_workspace(credential, workspace_id: str, expected_name: str, environment: str) -> None:
     """Refuse to deploy unless the workspace ID really is the workspace we expect."""
     token = credential.get_token(FABRIC_SCOPE).token
+    app_id, identity_type = token_identity(token)
+    print(f"Signed in as app {app_id} (identity type: {identity_type})")
     response = requests.get(
         f"{FABRIC_API}/workspaces/{workspace_id}",
         headers={"Authorization": f"Bearer {token}"},

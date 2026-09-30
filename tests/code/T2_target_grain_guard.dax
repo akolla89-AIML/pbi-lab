@@ -1,0 +1,23 @@
+// T2 Grain guard: Sales Target is BLANK below its grain (any customer or product filter, or part of a month)
+EVALUATE
+VAR _bySegment =
+    ADDCOLUMNS ( VALUES ( DimCustomer[Segment] ), "@Sales", [Total Sales], "@Target", [Sales Target] )
+VAR _byCategory =
+    ADDCOLUMNS ( VALUES ( DimProduct[Category] ), "@Sales", [Total Sales], "@Target", [Sales Target] )
+VAR _byWeekend =
+    ADDCOLUMNS ( VALUES ( DimDate[IsWeekend] ), "@Sales", [Total Sales], "@Target", [Sales Target] )
+VAR _leaks =
+    0
+        + COUNTROWS ( FILTER ( _bySegment, NOT ISBLANK ( [@Target] ) ) )
+        + COUNTROWS ( FILTER ( _byCategory, NOT ISBLANK ( [@Target] ) ) )
+        + COUNTROWS ( FILTER ( _byWeekend, NOT ISBLANK ( [@Target] ) ) )
+VAR _rowsWithSales =
+    0
+        + COUNTROWS ( FILTER ( _bySegment, NOT ISBLANK ( [@Sales] ) ) )
+        + COUNTROWS ( FILTER ( _byCategory, NOT ISBLANK ( [@Sales] ) ) )
+        + COUNTROWS ( FILTER ( _byWeekend, NOT ISBLANK ( [@Sales] ) ) )
+RETURN
+    ROW (
+        "Pass", _leaks = 0 && _rowsWithSales > 0,
+        "Detail", _leaks & " rows show a target below its grain; " & _rowsWithSales & " rows have sales"
+    )

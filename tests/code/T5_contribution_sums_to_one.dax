@@ -1,0 +1,10 @@
+// T5 Contribution: Customer Contribution % across all customers sums to exactly 1
+EVALUATE
+VAR _shares =
+    ADDCOLUMNS ( VALUES ( DimCustomer[CustomerName] ), "@Pct", [Customer Contribution %] )
+VAR _sum = SUMX ( _shares, [@Pct] )
+RETURN
+    ROW (
+        "Pass", ABS ( _sum - 1 ) < 0.000001,
+        "Detail", "Sum of shares " & FORMAT ( _sum, "0.000000" )
+    )

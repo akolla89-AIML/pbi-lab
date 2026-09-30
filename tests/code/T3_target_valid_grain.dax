@@ -1,0 +1,23 @@
+// T3 Target at a valid grain: every region x year with sales has Target, Variance and Var %, and Variance = Sales - Target
+EVALUATE
+VAR _grid =
+    FILTER (
+        ADDCOLUMNS (
+            CROSSJOIN ( VALUES ( DimGeography[Region] ), VALUES ( DimDate[Year] ) ),
+            "@Sales", [Total Sales],
+            "@Target", [Sales Target],
+            "@Var", [Sales Variance],
+            "@VarPct", [Sales Variance %]
+        ),
+        NOT ISBLANK ( [@Sales] )
+    )
+VAR _cells = 0 + COUNTROWS ( _grid )
+VAR _missing =
+    0 + COUNTROWS ( FILTER ( _grid, ISBLANK ( [@Target] ) || ISBLANK ( [@Var] ) || ISBLANK ( [@VarPct] ) ) )
+VAR _wrongVariance =
+    0 + COUNTROWS ( FILTER ( _grid, ABS ( [@Var] - ( [@Sales] - [@Target] ) ) > 0.01 ) )
+RETURN
+    ROW (
+        "Pass", _cells > 0 && _missing = 0 && _wrongVariance = 0,
+        "Detail", _cells & " cells; " & _missing & " missing a target value; " & _wrongVariance & " with wrong variance"
+    )

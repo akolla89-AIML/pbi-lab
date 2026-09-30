@@ -1,0 +1,20 @@
+// T8b Guard uses model history, not the slice: every customer segment has an R12M value in the first full-history month.
+// The blank segment (fact rows with no matching customer) is excluded; T7 reports those rows.
+EVALUATE
+VAR _firstSale = CALCULATE ( MINX ( FactSales, RELATED ( DimDate[Date] ) ), REMOVEFILTERS () )
+VAR _historyStart = EOMONTH ( _firstSale, -1 ) + 1
+VAR _month12 =
+    DATESBETWEEN ( DimDate[Date], EOMONTH ( _historyStart, 10 ) + 1, EOMONTH ( _historyStart, 11 ) )
+VAR _segments =
+    ADDCOLUMNS (
+        FILTER ( VALUES ( DimCustomer[Segment] ), NOT ISBLANK ( DimCustomer[Segment] ) ),
+        "@R12M", CALCULATE ( [Sales R12M], _month12 )
+    )
+VAR _blankSegments = 0 + COUNTROWS ( FILTER ( _segments, ISBLANK ( [@R12M] ) ) )
+RETURN
+    ROW (
+        "Pass", COUNTROWS ( _segments ) > 0 && _blankSegments = 0,
+        "Detail",
+            _blankSegments & " segments blank; "
+                & CONCATENATEX ( _segments, DimCustomer[Segment] & " " & FORMAT ( [@R12M], "0" ), ", " )
+    )

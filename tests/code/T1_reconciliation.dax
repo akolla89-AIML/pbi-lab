@@ -1,0 +1,23 @@
+// T1 Reconciliation: measures equal the raw column sums, and Order Count counts orders, not lines
+EVALUATE
+VAR _sales = [Total Sales]
+VAR _rawSales = SUM ( FactSales[SalesAmount] )
+VAR _target = [Sales Target]
+VAR _rawTarget = SUM ( FactSalesTarget[TargetAmount] )
+VAR _orders = [Order Count]
+VAR _lines = COUNTROWS ( FactSales )
+VAR _pass =
+    NOT ISBLANK ( _sales )
+        && ABS ( _sales - _rawSales ) < 0.01
+        && NOT ISBLANK ( _target )
+        && ABS ( _target - _rawTarget ) < 0.01
+        && _orders > 0
+        && _orders < _lines
+RETURN
+    ROW (
+        "Pass", _pass,
+        "Detail",
+            "Sales " & FORMAT ( _sales, "0.00" ) & " vs raw " & FORMAT ( _rawSales, "0.00" )
+                & "; Target " & FORMAT ( _target, "0" ) & " vs raw " & FORMAT ( _rawTarget, "0" )
+                & "; Orders " & _orders & " vs lines " & _lines
+    )
